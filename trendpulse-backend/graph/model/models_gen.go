@@ -5,14 +5,36 @@ package model
 type Article struct {
 	ID        string  `json:"id"`
 	URL       string  `json:"url"`
-	Title     *string `json:"title,omitempty"`
 	Content   *string `json:"content,omitempty"`
-	OwnerID   string  `json:"ownerId"`
 	CreatedAt string  `json:"createdAt"`
+}
+
+type AuthResponse struct {
+	Token string `json:"token"`
+	User  *User  `json:"user"`
+}
+
+type LoginInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type Mutation struct {
 }
 
 type Query struct {
+}
+
+type RegisterInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type SaveArticleInput struct {
+	URL string `json:"url"`
+}
+
+type User struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
 }

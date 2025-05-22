@@ -1,16 +1,36 @@
+type Mutation {
+  register(input: RegisterInput!): AuthResponse!
+  login(input: LoginInput!): AuthResponse!
+  saveArticle(input: SaveArticleInput!): Article!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input SaveArticleInput {
+  url: String!
+}
+
+type AuthResponse {
+  token: String!
+  user: User!
+}
+
+type User {
+  id: ID!
+  email: String!
+}
+
 type Article {
   id: ID!
   url: String!
-  title: String
   content: String
-  ownerId: ID!
   createdAt: String!
-}
-
-type Query {
-  myArticles: [Article!]!
-}
-
-type Mutation {
-  saveArticle(url: String!): Article!
 }

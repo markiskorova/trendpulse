@@ -1,31 +1,3 @@
-package tasks
-
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-
-	"github.com/PuerkitoBio/goquery"
-	"github.com/hibiken/asynq"
-	"gorm.io/gorm"
-
-	"github.com/markiskorova/trendpulse-backend/internal/models"
-)
-
-type ScrapePayload struct {
-	ArticleID uint `json:"article_id"`
-}
-
-func NewScrapeArticleTask(articleID uint) (*asynq.Task, error) {
-	payload, err := json.Marshal(ScrapePayload{ArticleID: articleID})
-	if err != nil {
-		return nil, err
-	}
-
-	return asynq.NewTask("scrape:article", payload), nil
-}
-
 func HandleScrapeArticleTask(db *gorm.DB) asynq.HandlerFunc {
 	return func(ctx context.Context, t *asynq.Task) error {
 		var p ScrapePayload
@@ -44,14 +16,25 @@ func HandleScrapeArticleTask(db *gorm.DB) asynq.HandlerFunc {
 		}
 		defer resp.Body.Close()
 
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("bad response status: %d", resp.StatusCode)
+		}
+
 		doc, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
 			return fmt.Errorf("failed to parse HTML: %w", err)
 		}
 
+		var content string
+		doc.Find("p").Each(func(i int, s *goquery.Selection) {
+			content += s.Text() + "\n"
+		})
+
 		article.Title = doc.Find("title").Text()
-		article.Content = doc.Find("p").Text() // Simple version: you can improve this
+		article.Content = content
+		article.Status = "scraped"
 
 		return db.Save(&article).Error
 	}
 }
+

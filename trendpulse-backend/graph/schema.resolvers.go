@@ -12,21 +12,36 @@ import (
 	"github.com/markiskorova/trendpulse-backend/graph/model"
 )
 
-// SaveArticle is the resolver for the saveArticle field.
-func (r *mutationResolver) SaveArticle(ctx context.Context, url string) (*model.Article, error) {
-	panic(fmt.Errorf("not implemented: SaveArticle - saveArticle"))
+// Register is the resolver for the register field.
+func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.AuthResponse, error) {
+	panic(fmt.Errorf("not implemented: Register - register"))
 }
 
-// MyArticles is the resolver for the myArticles field.
-func (r *queryResolver) MyArticles(ctx context.Context) ([]*model.Article, error) {
-	panic(fmt.Errorf("not implemented: MyArticles - myArticles"))
+// Login is the resolver for the login field.
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.AuthResponse, error) {
+	panic(fmt.Errorf("not implemented: Login - login"))
+}
+
+// SaveArticle is the resolver for the saveArticle field.
+func (r *mutationResolver) SaveArticle(ctx context.Context, input model.SaveArticleInput) (*model.Article, error) {
+	panic(fmt.Errorf("not implemented: SaveArticle - saveArticle"))
 }
 
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
-// Query returns generated.QueryResolver implementation.
-func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
-
 type mutationResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *queryResolver) Articles(ctx context.Context) ([]*model.Article, error) {
+	panic(fmt.Errorf("not implemented: Articles - articles"))
+}
+func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 type queryResolver struct{ *Resolver }
+*/

@@ -46,7 +46,7 @@ Trend Pulse is a simulated SaaS analytics platform designed to showcase secure b
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/trendpulse.git
+git clone https://github.com/markiskorova/trendpulse.git
 cd trendpulse
 ```
 

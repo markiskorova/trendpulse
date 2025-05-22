@@ -1,33 +1,66 @@
 package main
 
 import (
-    "log"
-    "net/http"
-    "os"
+	"log"
+	"net/http"
+	"os"
 
-    "github.com/gorilla/mux"
-    "trendpulse/internal/handlers"
-    "trendpulse/internal/middleware"
-    "trendpulse/internal/db"
+	"github.com/gorilla/mux"
+	"github.com/hibiken/asynq"
+
+	"trendpulse-backend/graph"
+	"trendpulse-backend/internal/db"
+	"trendpulse-backend/internal/handlers"
+	"trendpulse-backend/internal/middleware"
+
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 )
 
 func main() {
-    db.InitDB()
+	// Init DB
+	db.InitDB()
+	dbConn := db.Get()
 
-    r := mux.NewRouter()
-    r.HandleFunc("/health", handlers.HealthCheck).Methods("GET")
-    r.HandleFunc("/register", handlers.Register).Methods("POST")
-    r.HandleFunc("/login", handlers.Login).Methods("POST")
+	// Init Asynq client
+	asynqClient := asynq.NewClient(asynq.RedisClientOpt{Addr: "redis:6379"})
 
-    api := r.PathPrefix("/api").Subrouter()
-    api.Use(middleware.JWTAuthMiddleware)
-    api.HandleFunc("/events", handlers.SubmitEvent).Methods("POST")
+	// Router
+	r := mux.NewRouter()
 
-    port := os.Getenv("PORT")
-    if port == "" {
-        port = "8080"
-    }
+	// Public routes
+	r.HandleFunc("/health", handlers.HealthCheck).Methods("GET")
+	r.HandleFunc("/register", handlers.Register(dbConn)).Methods("POST")
+	r.HandleFunc("/login", handlers.Login(dbConn)).Methods("POST")
 
-    log.Printf("Server starting on port %s...", port)
-    log.Fatal(http.ListenAndServe(":"+port, r))
+	// Protected API routes
+	api := r.PathPrefix("/api").Subrouter()
+	api.Use(middleware.JWTAuthMiddleware)
+
+	// REST: Article routes
+	api.HandleFunc("/articles", handlers.GetArticles(dbConn)).Methods("GET")
+	api.HandleFunc("/articles", handlers.SaveArticle(asynqClient, dbConn)).Methods("POST")
+
+	// GraphQL handler
+	gqlServer := handler.NewDefaultServer(
+		graph.NewExecutableSchema(graph.Config{
+			Resolvers: &graph.Resolver{
+				DB:    dbConn,
+				Asynq: asynqClient,
+			},
+		}),
+	)
+
+	// GraphQL routes
+	r.Handle("/query", middleware.JWTAuthMiddleware(gqlServer)) // secured GraphQL endpoint
+	r.Handle("/", playground.Handler("GraphQL", "/query"))      // GraphQL playground UI
+
+	// Port setup
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("🚀 Server starting on port %s...", port)
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }

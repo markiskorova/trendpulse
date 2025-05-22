@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
-	"time"
 
-	"trendpulse/internal/db"
-	"trendpulse/internal/models"
-
-	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+
+	"trendpulse-backend/internal/auth"
+	"trendpulse-backend/internal/models"
 )
 
 var jwtKey = []byte(os.Getenv("JWT_SECRET"))
@@ -20,63 +19,73 @@ type Credentials struct {
 	Password string `json:"password"`
 }
 
-func Register(w http.ResponseWriter, r *http.Request) {
-	var creds Credentials
-	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
+func Register(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var input struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
+		}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(creds.Password), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, "Could not hash password", http.StatusInternalServerError)
-		return
-	}
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			http.Error(w, "Invalid input", http.StatusBadRequest)
+			return
+		}
 
-	_, err = db.DB.Exec(
-		"INSERT INTO users (email, password_hash) VALUES ($1, $2)",
-		creds.Email, string(hash),
-	)
-	if err != nil {
-		http.Error(w, "Could not create user", http.StatusInternalServerError)
-		return
-	}
+		// Hash the password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, "Could not hash password", http.StatusInternalServerError)
+			return
+		}
 
-	w.WriteHeader(http.StatusCreated)
+		// Create user model
+		user := models.User{
+			Email:    input.Email,
+			Password: string(hashedPassword), // ✅ This is where you set it
+		}
+
+		if err := db.Create(&user).Error; err != nil {
+			http.Error(w, "Failed to create user", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]string{"status": "registered"})
+	}
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
-	var creds Credentials
-	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
+func Login(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var input struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			http.Error(w, "Invalid input", http.StatusBadRequest)
+			return
+		}
+
+		var user models.User
+		if err := db.Where("email = ?", input.Email).First(&user).Error; err != nil {
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
+
+		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
+
+		// ✅ Generate JWT
+		token, err := auth.GenerateJWT(user.ID)
+		if err != nil {
+			http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(map[string]string{
+			"token": token,
+		})
 	}
-
-	var user models.User
-	err := db.DB.QueryRow(
-		"SELECT id, password_hash FROM users WHERE email=$1", creds.Email,
-	).Scan(&user.ID, &user.PasswordHash)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(creds.Password))
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	tokenString, err := token.SignedString(jwtKey)
-	if err != nil {
-		http.Error(w, "Could not create token", http.StatusInternalServerError)
-		return
-	}
-
-	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
 }

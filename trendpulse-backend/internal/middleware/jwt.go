@@ -2,21 +2,20 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 )
 
+var jwtSecret = []byte("REPLACE_WITH_REAL_SECRET")
+
+// Key type for context
 type contextKey string
 
-const userIDKey contextKey = "userID"
+const UserIDKey = contextKey("user_id")
 
 func JWTAuthMiddleware(next http.Handler) http.Handler {
-	secret := []byte(os.Getenv("JWT_SECRET"))
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
@@ -27,18 +26,27 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method")
-			}
-			return secret, nil
+			return jwtSecret, nil
 		})
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			ctx := context.WithValue(r.Context(), userIDKey, int(claims["user_id"].(float64)))
-			next.ServeHTTP(w, r.WithContext(ctx))
-		} else {
+		if err != nil || !token.Valid {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			fmt.Println("JWT error:", err)
+			return
 		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+			return
+		}
+
+		userIDFloat, ok := claims["user_id"].(float64)
+		if !ok {
+			http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), UserIDKey, uint(userIDFloat))
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

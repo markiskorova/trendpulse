@@ -1,29 +1,42 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  db:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: trendpulse
-    ports:
-      - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-
   backend:
     build:
       context: ./trendpulse-backend
+      dockerfile: Dockerfile
+    working_dir: /app/cmd/api
+    command: ["/app/bin/api"]
+    volumes:
+      - .:/app
     ports:
       - "8080:8080"
     depends_on:
-      - db
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/trendpulse?sslmode=disable
-      JWT_SECRET: supersecret
+      - postgres
+      - redis
 
-volumes:
-  db_data:
+  worker:
+    build:
+      context: ./trendpulse-backend
+      dockerfile: Dockerfile
+    working_dir: /app/cmd/worker
+    command: ["/app/bin/worker"]
+    depends_on:
+      - postgres
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: trendpulse
+      DB_PORT: 5432
+    ports:
+      - "5432:5432"

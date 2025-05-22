@@ -1,0 +1,19 @@
+# Your real application schema
+
+type Article {
+  id: ID!
+  url: String!
+  title: String
+  content: String
+  ownerId: ID!
+  createdAt: String!
+}
+
+type Query {
+  myArticles: [Article!]!
+}
+
+type Mutation {
+  saveArticle(url: String!): Article!
+}
+

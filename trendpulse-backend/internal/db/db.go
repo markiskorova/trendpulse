@@ -9,7 +9,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"trendpulse-backend/internal/models"
+	"github.com/markiskorova/trendpulse-backend/internal/models"
 )
 
 var (

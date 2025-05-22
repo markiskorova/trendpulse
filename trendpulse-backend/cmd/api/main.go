@@ -8,10 +8,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hibiken/asynq"
 
-	"trendpulse-backend/graph"
-	"trendpulse-backend/internal/db"
-	"trendpulse-backend/internal/handlers"
-	"trendpulse-backend/internal/middleware"
+	"github.com/markiskorova/trendpulse-backend/graph"
+	"github.com/markiskorova/trendpulse-backend/graph/generated"
+	"github.com/markiskorova/trendpulse-backend/internal/db"
+	"github.com/markiskorova/trendpulse-backend/internal/handlers"
+	"github.com/markiskorova/trendpulse-backend/internal/middleware"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -43,7 +44,7 @@ func main() {
 
 	// GraphQL handler
 	gqlServer := handler.NewDefaultServer(
-		graph.NewExecutableSchema(graph.Config{
+		generated.NewExecutableSchema(generated.Config{
 			Resolvers: &graph.Resolver{
 				DB:    dbConn,
 				Asynq: asynqClient,

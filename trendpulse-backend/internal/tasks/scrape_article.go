@@ -10,7 +10,7 @@ import (
 	"github.com/hibiken/asynq"
 	"gorm.io/gorm"
 
-	"trendpulse-backend/internal/models"
+	"github.com/markiskorova/trendpulse-backend/internal/models"
 )
 
 type ScrapePayload struct {

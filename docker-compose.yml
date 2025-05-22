@@ -5,12 +5,16 @@ services:
     build:
       context: ./trendpulse-backend
       dockerfile: Dockerfile
-    working_dir: /app/cmd/api
+    working_dir: /app
     command: ["/app/bin/api"]
-    volumes:
-      - .:/app
     ports:
       - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: trendpulse
+      DB_PORT: "5432"
     depends_on:
       - postgres
       - redis
@@ -19,8 +23,14 @@ services:
     build:
       context: ./trendpulse-backend
       dockerfile: Dockerfile
-    working_dir: /app/cmd/worker
+    working_dir: /app
     command: ["/app/bin/worker"]
+    environment:
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: trendpulse
+      DB_PORT: "5432"
     depends_on:
       - postgres
       - redis
@@ -31,12 +41,10 @@ services:
       - "6379:6379"
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15
     environment:
-      DB_HOST: postgres
-      DB_USER: postgres
-      DB_PASSWORD: password
-      DB_NAME: trendpulse
-      DB_PORT: 5432
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: trendpulse
     ports:
       - "5432:5432"

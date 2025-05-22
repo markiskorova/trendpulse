@@ -3,8 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"trendpulse-backend/internal/models"
-	"trendpulse-backend/internal/tasks"
+
+	"github.com/markiskorova/trendpulse-backend/internal/models"
+	"github.com/markiskorova/trendpulse-backend/internal/tasks"
 
 	"github.com/gorilla/context"
 	"github.com/hibiken/asynq"

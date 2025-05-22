@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"trendpulse-backend/internal/db"
-	"trendpulse-backend/internal/tasks"
+	"github.com/markiskorova/trendpulse-backend/internal/db"
+	"github.com/markiskorova/trendpulse-backend/internal/tasks"
 
 	"github.com/hibiken/asynq"
 )

@@ -126,4 +126,4 @@ MIT – Free to use and adapt. Mention Trend Pulse if shared.
 ---
 
 ## 🙋‍♂️ Author
-Built by [Your Name] – Software Engineer focused on secure backend systems and platform-scale architecture.
+Built by markiskorova – Software Engineer focused on secure backend systems and platform-scale architecture.

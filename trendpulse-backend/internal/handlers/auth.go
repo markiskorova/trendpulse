@@ -8,8 +8,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	"trendpulse-backend/internal/auth"
-	"trendpulse-backend/internal/models"
+	"github.com/markiskorova/trendpulse-backend/internal/auth"
+	"github.com/markiskorova/trendpulse-backend/internal/models"
 )
 
 var jwtKey = []byte(os.Getenv("JWT_SECRET"))

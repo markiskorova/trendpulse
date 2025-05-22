@@ -1,5 +1,3 @@
-# Your real application schema
-
 type Article {
   id: ID!
   url: String!
@@ -16,4 +14,3 @@ type Query {
 type Mutation {
   saveArticle(url: String!): Article!
 }
-

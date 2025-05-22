@@ -10,3 +10,9 @@ type Article struct {
 	OwnerID   string  `json:"ownerId"`
 	CreatedAt string  `json:"createdAt"`
 }
+
+type Mutation struct {
+}
+
+type Query struct {
+}

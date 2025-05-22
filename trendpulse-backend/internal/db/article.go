@@ -1,7 +1,7 @@
 package db
 
 import (
-	"trendpulse-backend/internal/models"
+	"github.com/markiskorova/trendpulse-backend/internal/models"
 
 	"gorm.io/gorm"
 )

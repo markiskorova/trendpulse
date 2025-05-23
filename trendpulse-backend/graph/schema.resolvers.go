@@ -24,7 +24,33 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 
 // SaveArticle is the resolver for the saveArticle field.
 func (r *mutationResolver) SaveArticle(ctx context.Context, input model.SaveArticleInput) (*model.Article, error) {
-	panic(fmt.Errorf("not implemented: SaveArticle - saveArticle"))
+	userID := getUserIDFromContext(ctx)
+	if userID == 0 {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	// Save to DB
+	article := models.Article{
+		URL:    url,
+		UserID: userID,
+		Status: "pending",
+	}
+	if err := r.DB.Create(&article).Error; err != nil {
+		return nil, err
+	}
+
+	// Enqueue background job
+	if err := queue.EnqueueScrapeTask(article.ID); err != nil {
+		return nil, fmt.Errorf("failed to enqueue scrape task: %w", err)
+	}
+
+	// Return GraphQL model (optional transformation if needed)
+	return &model.Article{
+		ID:        fmt.Sprint(article.ID),
+		URL:       article.URL,
+		Status:    article.Status,
+		CreatedAt: article.CreatedAt.String(),
+	}, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
@@ -39,9 +65,7 @@ type mutationResolver struct{ *Resolver }
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
 /*
-	func (r *queryResolver) Articles(ctx context.Context) ([]*model.Article, error) {
-	panic(fmt.Errorf("not implemented: Articles - articles"))
+	func (r *mutationResolver) SaveArticle(ctx context.Context, input model.SaveArticleInput) (*model.Article, error) {
+	panic(fmt.Errorf("not implemented: SaveArticle - saveArticle"))
 }
-func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
-type queryResolver struct{ *Resolver }
 */

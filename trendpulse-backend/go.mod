@@ -7,7 +7,6 @@ go 1.23.0
 
 require (
 	github.com/99designs/gqlgen v0.17.73
-	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/gorilla/context v1.1.2
 	github.com/gorilla/mux v1.8.1
@@ -20,7 +19,6 @@ require (
 
 require (
 	github.com/agnivade/levenshtein v1.2.1 // indirect
-	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
@@ -37,7 +35,6 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
